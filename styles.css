@@ -10,3 +10,7 @@ a {
 a:hover {
   textdecoration:underline;
 }
+
+h1 {
+  text-align:center;
+}
