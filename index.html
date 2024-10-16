@@ -4,9 +4,14 @@
     <link rel="stylesheet" href="styles.css></link>
   </head>
   <body>
-    <h1>Trackman Pitch Stats Viewer</h1>
-    Strting date
-    Ending date
+    <h1 class="red">Trackman Pitch Stats Viewer</h1>
+    <form onsubmit="downloadData();">
+      <label>Strting Date</label>
+      <input type="date" id="startdate"></input>
+      <label>End Date</label>
+      <input type="date" id="enddate"></input>
+      <button>Filter</button>
+    </form>
     <table>
       <tr>
         <th>ID</th>
@@ -29,5 +34,6 @@
         <td>K</td>
       </tr>
     </table>
+    <script scr="script.js"></script>
   </body>
 </html>
