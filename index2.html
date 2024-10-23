@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch Stats</title>
+  <style>
+    .blue {
+      color: #0C2340;
+    }
+
+    .red {
+      color: #BD1F2D;
+    }
+
+    th {
+      border-bottom: 1px solid gray;
+      font-weight: bold;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    th.sorted {
+      text-decoration: underline;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    h1 {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="red">Trackman Pitch Stats Viewer</h1>
+
+  <form onsubmit="filterData(event);">
+    <label>Starting date</label>
+    <input type="date" id="startdate">
+    <label>End date</label>
+    <input type="date" id="enddate">
+    <button>Filter</button>
+  </form>
+
+  <table id="pitchTable">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">ID</th>
+        <th onclick="sortTable(1)">Speed</th>
+        <th onclick="sortTable(2)">Result</th>
+        <th onclick="sortTable(3)">Datetime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Dynamic rows will be inserted here -->
+    </tbody>
+  </table>
+
+  <script>
+    let data = [];
+
+    // Fetch the data from the provided URL
+    fetch('https://compute.samford.edu/zohauth/clients/datajson')
+      .then(response => response.json())  // Convert the response to JSON
+      .then(fetchedData => {
+        data = fetchedData;
+        populateTable(data);
+      })
+      .catch(error => console.error('Error fetching data:', error));
+
+    // Populate the table with data
+    function populateTable(data) {
+      const tableBody = document.querySelector('#pitchTable tbody');
+      tableBody.innerHTML = '';  // Clear any existing rows
+
+      data.forEach(pitch => {
+        let row = tableBody.insertRow();
+
+        let idCell = row.insertCell(0);
+        let speedCell = row.insertCell(1);
+        let resultCell = row.insertCell(2);
+        let datetimeCell = row.insertCell(3);
+
+        idCell.innerHTML = `<a href="details.html">Pitch ${pitch.id}</a>`;
+        speedCell.textContent = pitch.speed;
+        resultCell.textContent = pitch.result || '--';
+        datetimeCell.textContent = pitch.datetime || '--';
+      });
+    }
+
+    // Filter data by date range
+    function filterData(event) {
+      event.preventDefault();
+
+      let startdate = new Date(document.getElementById('startdate').value);
+      let enddate = new Date(document.getElementById('enddate').value);
+
+      const filteredData = data.filter(pitch => {
+        let pitchDate = new Date(pitch.datetime);
+        return pitchDate >= startdate && pitchDate <= enddate;
+      });
+
+      populateTable(filteredData);
+    }
+
+    // Sort the table
+    let sortOrder = 1;
+    let lastSortedColumn = -1;
+
+    function sortTable(columnIndex) {
+      const table = document.getElementById("pitchTable");
+      const rows = Array.from(table.rows).slice(1);  // Exclude header row
+
+      if (lastSortedColumn !== columnIndex) {
+        sortOrder = 1;  // Reset sort order if different column
+      } else {
+        sortOrder *= -1;  // Reverse sort order if same column
+      }
+
+      rows.sort((rowA, rowB) => {
+        const cellA = rowA.cells[columnIndex].textContent.trim();
+        const cellB = rowB.cells[columnIndex].textContent.trim();
+
+        if (columnIndex === 1) {  // Sort numerically if sorting by Speed
+          return sortOrder * (parseFloat(cellA) - parseFloat(cellB));
+        } else if (columnIndex === 3) {  // Sort by datetime
+          return sortOrder * (new Date(cellA) - new Date(cellB));
+        } else {  // Sort alphabetically for other columns
+          return sortOrder * cellA.localeCompare(cellB);
+        }
+      });
+
+      // Append sorted rows to the table body
+      const tableBody = document.querySelector("#pitchTable tbody");
+      rows.forEach(row => tableBody.appendChild(row));
+
+      // Update sorting UI
+      updateSortingUI(columnIndex);
+    }
+
+    // Update CSS to show which column is being sorted
+    function updateSortingUI(columnIndex) {
+      const headers = document.querySelectorAll('th');
+      headers.forEach((header, index) => {
+        if (index === columnIndex) {
+          header.classList.add('sorted');
+        } else {
+          header.classList.remove('sorted');
+        }
+      });
+      lastSortedColumn = columnIndex;
+    }
+  </script>
+
+</body>
+</html>
